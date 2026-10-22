@@ -493,3 +493,52 @@ From the original Review 0 proposal, prioritized next steps are:
 ### Attribution and use
 
 Created as an academic MERN implementation following the team's Design Project Review 0 concept. Replace illustrative figures with genuine results before submitting screenshots or test evidence in an academic review.
+
+
+## New Review 1 extensions: SupplyChain DNA (implemented in source)
+
+Two extensions have been added to the existing MERN inventory platform, rather than replacing it:
+
+### Feature A — Product DNA Missing-Checkpoint Detection
+
+**Existing limitation:** Conventional shipment timelines depend on observed scans, so gaps are not obvious to an investigator.
+
+**Our implementation:** `server/dna-rules.js` evaluates the configured stage order **manufacturer → transporter → warehouse → retailer**. `server/dna.js` stores recorded checkpoint events and exposes a journey-inspection API. The React **SupplyChain DNA** page provides event entry and a gap view. A missing transporter step is explicitly labeled missing, never inserted as a false verified event.
+
+**Demonstration:** In the SupplyChain DNA page, enter two events for batch `MILK-RAW-A`: manufacturer and warehouse. Select **Analyze journey**. Expected output includes `missing: ["transporter"]`. This is a deterministic gap check, **not an AI route-reconstruction system**.
+
+### Feature B — Batch Genealogy and Recall Impact Graph
+
+**Existing limitation:** A simple shipment tracker does not explain which finished batches were derived from a defective input lot.
+
+**Our implementation:** Authorized users register parent-to-child batch relationships through `POST /api/dna/lineage`. `descendants()` uses breadth-first graph traversal to find recorded downstream batches. The React DNA page supports adding relationships and querying recall reach. The API attempts to prevent new lineage cycles.
+
+**Demonstration:** Add the relationships `MILK-RAW-A → MIX-1` and `MIX-1 → PACK-1`. Run a recall for `MILK-RAW-A`. Expected `recordedDownstreamBatches` contains `MIX-1` and `PACK-1`. If records are missing, impact results may be incomplete; the feature cannot certify product safety.
+
+### Feature evidence in GitHub
+
+| Evidence | What to show during presentation |
+| --- | --- |
+| [DNA algorithm source](server/dna-rules.js) | Sequence-gap algorithm and breadth-first genealogy |
+| [DNA API controllers](server/dna.js) | Checkpoint write/read and downstream recall endpoints |
+| [DNA frontend](client/src/DnaPanel.jsx) | Working-page source and demo form |
+| [DNA tests](server/tests/dna.test.js) | Cases for missing checkpoint, complete journey, lineage traversal |
+| [API integration](server/index.js) | `registerDna(app)` after authentication |
+
+### New API endpoints
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/dna/events` | Record a verified checkpoint entered by staff |
+| GET | `/api/dna/journey/:batch` | Inspect observed journey and detect missing stages |
+| POST | `/api/dna/lineage` | Register parent/child batch relationship |
+| GET | `/api/dna/lineage` | List recorded batch relationships |
+| GET | `/api/dna/recall/:batch` | Traverse downstream batch genealogy |
+
+All DNA routes use the application's existing JWT authentication; write operations restrict access to admin/manager/staff.
+
+**Testing note:** New unit-test cases are committed but were not executed against a real MongoDB-backed browser session in this update. Run `cd server && npm test` and demonstrate both workflows locally before reporting them as fully tested. These are implementation extensions, not claims of worldwide scientific novelty.
+
+### Suggested review statement
+
+> We extended the original Smart Inventory SCM project with two new traceability capabilities. First, the DNA journey analyzer detects missing handoff checkpoints without fabricating tracking evidence. Second, the batch genealogy engine traces downstream products affected by a defective source lot. Both are implemented in JavaScript using authenticated Express APIs, MongoDB schemas, React forms, and graph-based business rules.
