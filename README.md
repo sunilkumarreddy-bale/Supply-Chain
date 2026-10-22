@@ -1,15 +1,12 @@
 # Smart Inventory & Supply Chain Management
 
-MERN full-stack project for warehouse inventory, suppliers, purchasing, QR scanning, and alerts.
+MERN demonstration implementation for Review 1: products, warehouses, inventory movements, purchase orders and dashboards.
 
-## Current development status
-Core source implementation has been prepared locally. This GitHub repository is being initialized; a fully tested application has **not** yet been published here. Do not treat this README as proof of completed deployment.
+## Run
 
-## Planned layout
-- `client/`: React and Vite interface
-- `server/`: Express API, MongoDB models, tests
+1. Copy `server/.env.example` to `server/.env`, configure MongoDB and JWT secret.
+2. `cd server && npm install && npm run dev`
+3. `cd client && npm install && npm run dev`
+4. Create the first administrator: `cd server && npm run seed` with `SEED_ADMIN_PASSWORD` in `.env`.
 
-Node.js 20+, a MongoDB replica set or Atlas deployment, and environment variables are required.
-
-## Security
-Never commit `.env` files or credentials. Use a unique JWT secret and seed password.
+MongoDB replica-set deployment is recommended for production transactions. This repository contains application source, not verified production deployment.

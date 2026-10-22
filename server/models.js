@@ -1,0 +1,13 @@
+import mongoose from 'mongoose';
+const {Schema,model}=mongoose;
+const options={timestamps:true};
+export const User=model('User',new Schema({name:String,email:{type:String,unique:true,lowercase:true},passwordHash:String,role:{type:String,enum:['admin','manager','staff','supplier'],default:'staff'}},options));
+export const Supplier=model('Supplier',new Schema({name:{type:String,required:true},email:String,phone:String,leadDays:{type:Number,default:7}},options));
+export const Warehouse=model('Warehouse',new Schema({name:{type:String,required:true},code:{type:String,unique:true,required:true},address:String},options));
+export const Product=model('Product',new Schema({sku:{type:String,unique:true,required:true},name:{type:String,required:true},price:{type:Number,default:0,min:0},reorderPoint:{type:Number,default:10},targetStock:{type:Number,default:40},supplier:{type:Schema.Types.ObjectId,ref:'Supplier'}},options));
+const stockSchema=new Schema({product:{type:Schema.Types.ObjectId,ref:'Product',required:true},warehouse:{type:Schema.Types.ObjectId,ref:'Warehouse',required:true},batch:{type:String,default:'DEFAULT'},quantity:{type:Number,default:0,min:0}},options);
+stockSchema.index({product:1,warehouse:1,batch:1},{unique:true});
+export const Stock=model('Stock',stockSchema);
+export const Movement=model('Movement',new Schema({product:{type:Schema.Types.ObjectId,ref:'Product'},warehouse:{type:Schema.Types.ObjectId,ref:'Warehouse'},batch:String,type:String,quantity:Number,user:{type:Schema.Types.ObjectId,ref:'User'}},options));
+export const PurchaseOrder=model('PurchaseOrder',new Schema({supplier:{type:Schema.Types.ObjectId,ref:'Supplier'},warehouse:{type:Schema.Types.ObjectId,ref:'Warehouse'},product:{type:Schema.Types.ObjectId,ref:'Product'},quantity:{type:Number,min:1},received:{type:Number,default:0},status:{type:String,enum:['draft','approved','confirmed','partially_received','received','rejected'],default:'draft'},createdBy:{type:Schema.Types.ObjectId,ref:'User'}},options));
+export const Audit=model('Audit',new Schema({user:{type:Schema.Types.ObjectId,ref:'User'},operation:String,data:Schema.Types.Mixed},options));
