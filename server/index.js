@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';import cors from 'cors';import helmet from 'helmet';import rateLimit from 'express-rate-limit';import mongoose from 'mongoose';import jwt from 'jsonwebtoken';import bcrypt from 'bcryptjs';import {Server} from 'socket.io';import {createServer} from 'node:http';import {z} from 'zod';
 import {User,Supplier,Warehouse,Product,Stock,Movement,PurchaseOrder,Audit} from './models.js';
 import {reorderSuggestion,receiptStatus} from './rules.js';
+import {registerDna} from './dna.js';
 if(!process.env.JWT_SECRET||process.env.JWT_SECRET.length<32)throw Error('Set JWT_SECRET of at least 32 characters');
 const app=express(),http=createServer(app),origin=process.env.CLIENT_ORIGIN||'http://localhost:5173',io=new Server(http,{cors:{origin}});
 app.use(helmet());app.use(cors({origin}));app.use(express.json({limit:'1mb'}));app.use('/api/login',rateLimit({windowMs:900000,limit:30}));
@@ -13,6 +14,7 @@ const schemaId=z.string().regex(/^[0-9a-f]{24}$/i);
 app.get('/api/health',(_,res)=>res.json({status:'ok'}));
 app.post('/api/login',wrap(async(req,res)=>{const d=z.object({email:z.string().email(),password:z.string()}).parse(req.body);const user=await User.findOne({email:d.email.toLowerCase()});if(!user||!await bcrypt.compare(d.password,user.passwordHash))return res.status(401).json({error:'Invalid credentials'});res.json({token:jwt.sign({sub:user.id},process.env.JWT_SECRET,{expiresIn:'8h'}),user:{name:user.name,role:user.role,email:user.email}})}));
 app.use('/api',auth);
+registerDna(app);
 app.get('/api/me',(req,res)=>res.json({name:req.user.name,role:req.user.role,email:req.user.email}));
 const entities=[['products',Product,z.object({sku:z.string().min(2),name:z.string().min(2),price:z.number().nonnegative().default(0),reorderPoint:z.number().nonnegative().default(10),targetStock:z.number().nonnegative().default(40),supplier:schemaId.optional()})],['suppliers',Supplier,z.object({name:z.string().min(2),email:z.string().email().optional(),phone:z.string().optional(),leadDays:z.number().nonnegative().optional()})],['warehouses',Warehouse,z.object({name:z.string().min(2),code:z.string().min(2),address:z.string().optional()})]];
 for(const [name,Model,schema] of entities){
