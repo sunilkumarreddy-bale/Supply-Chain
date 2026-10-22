@@ -1,0 +1,20 @@
+[
+  {
+    "product": "RICE-5KG",
+    "quantity": 200,
+    "received": 0,
+    "status": "draft"
+  },
+  {
+    "product": "MILK-1L",
+    "quantity": 100,
+    "received": 0,
+    "status": "approved"
+  },
+  {
+    "product": "OIL-1L",
+    "quantity": 120,
+    "received": 50,
+    "status": "partially_received"
+  }
+]
